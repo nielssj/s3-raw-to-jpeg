@@ -23,13 +23,16 @@ class KeyMeta:
 def getRawFromS3(key):
     # Get filename from path
     req = re.search('^(.+/)(.+).NEF$', key.name)
-    s3_path = req.group(1)
-    filename = req.group(2)
+    if(req):
+        s3_path = req.group(1)
+        filename = req.group(2)
 
-    # Copy to file
-    fp = open(filename + ".NEF", "w")
-    key.get_file(fp)
-    return KeyMeta(s3_path, filename)
+        # Copy to file
+        fp = open(filename + ".NEF", "w")
+        key.get_file(fp)
+        return KeyMeta(s3_path, filename)
+    else:
+        return None
 
 def produceJPGs(key_meta):
     params_def = ["ufraw-batch", key_meta.filename + ".NEF", "--embedded-image", "--overwrite"]
@@ -78,17 +81,20 @@ file_count = 0
 for key in content:
     print "Getting raw from S3"
     key_meta = getRawFromS3(key)
-    print "Raw [%s] retrieved" % key_meta.filename
 
-    print "Producing bitmaps"
-    produceJPGs(key_meta)
-    print "Bitmaps produced"
+    if(key_meta):
+        print "Raw [%s] retrieved" % key_meta.filename
 
-    print "Uploading bitmaps to S3"
-    uploadToS3(key_meta)
-    print "All bitmaps uploaded to S3"
-    file_count = file_count + 1
-    break
+        print "Producing bitmaps"
+        produceJPGs(key_meta)
+        print "Bitmaps produced"
+
+        print "Uploading bitmaps to S3"
+        uploadToS3(key_meta)
+        print "All bitmaps uploaded to S3"
+        file_count = file_count + 1
+        if(file_count > 2):
+            break
 end = time.time()
 
 time_delta = end - start
