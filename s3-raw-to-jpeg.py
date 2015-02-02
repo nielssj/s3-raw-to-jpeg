@@ -1,6 +1,6 @@
 __author__ = 'niels'
 
-import sys, re, time
+import sys, re, time, os
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
 from subprocess import call
@@ -76,6 +76,12 @@ def uploadToS3(key_meta):
     key_full.set_contents_from_filename(key_meta.filename_full)
     print "[%s] uploaded" % key_full.key
 
+def cleanUp(key_meta):
+    os.remove(key_meta.filename + ".NEF")
+    os.remove(key_meta.filename_tiny)
+    os.remove(key_meta.filename_prev)
+    os.remove(key_meta.filename_full)
+
 start = time.time()
 file_count = 0
 for key in content:
@@ -92,9 +98,15 @@ for key in content:
         print "Uploading bitmaps to S3"
         uploadToS3(key_meta)
         print "All bitmaps uploaded to S3"
+
+        print "Cleaning up"
+        cleanUp(key_meta)
+
         file_count = file_count + 1
         if(file_count > 2):
             break
+    else:
+        print "Non-RAW found, skipping"
 end = time.time()
 
 time_delta = end - start
