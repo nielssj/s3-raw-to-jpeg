@@ -103,8 +103,6 @@ for key in content:
         cleanUp(key_meta)
 
         file_count = file_count + 1
-        if(file_count > 2):
-            break
     else:
         print "Non-RAW found, skipping"
 end = time.time()
